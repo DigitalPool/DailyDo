@@ -7,29 +7,27 @@ import 'package:hive/hive.dart';
 
 import '../utils/todo_tile.dart';
 
-Future<void> showPersistentNotification(int id, String title, String body) async {
+Future<void> showNotification(String title, String body) async {
   const AndroidNotificationDetails androidPlatformChannelSpecifics =
       AndroidNotificationDetails(
-    'task_channel_id', // Channel ID
+    'task_channel_id', // Unique channel ID
     'Task Notifications', // Channel name
-    channelDescription: 'Notifications for individual tasks',
+    channelDescription: 'Notifications for task updates',
     importance: Importance.max,
     priority: Priority.high,
-    ongoing: true, // Makes the notification persistent
-    autoCancel: false, // Prevents accidental dismissal
+    ticker: 'ticker',
   );
 
   const NotificationDetails platformChannelSpecifics =
       NotificationDetails(android: androidPlatformChannelSpecifics);
 
   await flutterLocalNotificationsPlugin.show(
-    id, // Use a unique ID for each notification
-    title,
-    body,
+    0, // Notification ID
+    title, // Notification title
+    body, // Notification body
     platformChannelSpecifics,
   );
 }
-
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
