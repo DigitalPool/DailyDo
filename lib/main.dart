@@ -12,7 +12,7 @@ void main() async {
 	WidgetsFlutterBinding.ensureInitialized();
 
 	const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+      AndroidInitializationSettings('@mipmap/launch_image');
   const InitializationSettings initializationSettings =
       InitializationSettings(android: initializationSettingsAndroid);
 

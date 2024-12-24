@@ -7,27 +7,30 @@ import 'package:hive/hive.dart';
 
 import '../utils/todo_tile.dart';
 
-Future<void> showNotification(String title, String body) async {
+Future<void> showPersistentNotification(
+    int id, String title, String body) async {
   const AndroidNotificationDetails androidPlatformChannelSpecifics =
       AndroidNotificationDetails(
-    'task_channel_id', // Unique channel ID
+    'task_channel_id', // Channel ID
     'Task Notifications', // Channel name
-    channelDescription: 'Notifications for task updates',
+    channelDescription: 'Notifications for individual tasks',
     importance: Importance.max,
     priority: Priority.high,
-    ticker: 'ticker',
+    ongoing: true, // Makes the notification persistent
+    autoCancel: false, // Prevents accidental dismissal
   );
 
   const NotificationDetails platformChannelSpecifics =
       NotificationDetails(android: androidPlatformChannelSpecifics);
 
   await flutterLocalNotificationsPlugin.show(
-    0, // Notification ID
-    title, // Notification title
-    body, // Notification body
+    id, // Use a unique ID for each notification
+    title,
+    body,
     platformChannelSpecifics,
   );
 }
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -60,42 +63,67 @@ class _HomePageState extends State<HomePage> {
 //     ["Make tutorial", false],
 //   ];
 
-  void deleteTask(int index) {
+void deleteTask(int index) {
     setState(() {
-		String taskName = db.toDoList[index][0];
+      String taskName = db.toDoList[index][0];
       db.toDoList.removeAt(index);
-	  showNotification('Task Deleted', 'Task "$taskName" has been deleted.');
+
+      // Cancel the notification for the deleted task
+      flutterLocalNotificationsPlugin.cancel(index);
+
+      // Optionally, show a notification for task deletion
+      showPersistentNotification(
+        index, // Use the task index or a unique ID
+        'Task Deleted',
+        'Task "$taskName" has been removed.',
+      );
     });
     db.updateDataBase();
   }
 
+
   //checkbox was tapped
-  void checkboxChanged(bool? value, int index) {
+void checkboxChanged(bool? value, int index) {
     setState(() {
       db.toDoList[index][1] = !db.toDoList[index][1];
-	  if (db.toDoList[index][1]) {
-        showNotification('Task Completed',
-            'Task "${db.toDoList[index][0]}" has been completed.');
+
+      if (db.toDoList[index][1]) {
+        // Task marked as completed
+        showPersistentNotification(
+          index, // Use the task index as the ID
+          'Task "${db.toDoList[index][0]}"',
+          '"${db.toDoList[index][0]}" is now completed.',
+        );
+      } else {
+        // Task marked as incomplete
+        showPersistentNotification(
+          index,
+          'Task Updated',
+          '"${db.toDoList[index][0]}" is incomplete.',
+        );
       }
     });
     db.updateDataBase();
   }
 
+
 //saveNewTask
-  void saveNewTask() {
+
+void saveNewTask() {
     if (_controller.text.isNotEmpty) {
       setState(() {
         db.toDoList.add([_controller.text, false]);
-		showNotification(
-            'Task Added', 'Task "${_controller.text}" has been added.');
+        // Call the notification function with a unique ID
+        showPersistentNotification(
+          db.toDoList.length, // Use the index or a unique ID
+          'New Task Added',
+          'Task "${_controller.text}" is incomplete.',
+        );
         _controller.clear();
       });
+      Navigator.of(context).pop(); // Close the dialog // Clear the text field after saving
+      db.updateDataBase();
     }
-    Navigator.of(context).pop(); // Clear the text field after saving
-    // Close the dialog box
-
-    //update database
-    db.updateDataBase();
   }
 
 // create a new task
